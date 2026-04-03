@@ -1,0 +1,40 @@
+cameras:
+  - id: cam_1
+    url: rtsp://username:password@192.168.1.101:554/Streaming/Channels/101
+  - id: cam_2
+    url: rtsp://username:password@192.168.1.102:554/Streaming/Channels/101
+  - id: cam_3
+    url: rtsp://username:password@192.168.1.103:554/Streaming/Channels/101
+
+recognition:
+  threshold: 0.55
+  cooldown_seconds: 300
+  min_frames: 3
+  process_every_n_frames: 3
+  face_min_size: 60
+  blur_threshold: 80.0
+  resize_width: 1280
+  match_strategy: top3_average
+  top_k: 3
+  unknown_save_limit_per_hour: 200
+
+runtime:
+  reconnect_delay_seconds: 5
+  queue_poll_interval_seconds: 0.5
+  process_start_method: spawn
+  detector_name: buffalo_l
+  providers:
+    - CPUExecutionProvider
+
+api:
+  base_url: http://localhost:3000
+  attendance_path: /api/attendance/mark
+  api_key: change-me
+  timeout_seconds: 5
+  retry_attempts: 3
+  retry_backoff_seconds: 1.5
+
+logging:
+  log_dir: logs
+  unknown_faces_dir: logs/unknown_faces
+  level: INFO

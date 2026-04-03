@@ -1,0 +1,1 @@
+"""Employee attendance system package."""
