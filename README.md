@@ -1,12 +1,13 @@
 # Real-Time Employee Attendance
 
-Headless Python service for multi-camera employee attendance using Hikvision RTSP streams, InsightFace face detection/recognition, and a Node.js attendance API.
+Headless Python service for multi-camera employee attendance using Hikvision RTSP streams, SCRFD face detection, ArcFace embeddings, ONNX Runtime inference, and a Node.js attendance API.
 
 ## Features
 
 - Separate process per RTSP camera for stability
 - Multi-face detection and recognition in the same frame
-- ArcFace embeddings with multiple stored embeddings per employee
+- SCRFD ONNX face detection with 5-point landmarks
+- ArcFace ONNX embeddings with multiple stored embeddings per employee
 - Multi-frame confirmation to reduce false positives
 - Cooldown-based duplicate suppression
 - API retry logic with `x-api-key`
@@ -36,20 +37,22 @@ app/
 pip install -r requirements.txt
 ```
 
-Recommended packages:
+Runtime dependencies:
 
-- `opencv-python-headless`
-- `insightface`
+- `opencv-python`
 - `onnxruntime`
 - `numpy`
-- `PyYAML`
-- `requests`
 
 ## Configure
 
-1. Edit [app/config.yaml](/d:/HikVision%20AI%20Tracking/app/config.yaml) with real RTSP URLs, API base URL, and API key.
+1. Edit [app/config.yaml](/d:/HikVision%20AI%20Tracking/app/config.yaml) with real RTSP URLs, API base URL, API key, and ONNX model paths.
 2. Keep `threshold` conservative at first, usually `0.55` to `0.60`.
 3. Use at least 3 to 5 clear images per employee for enrollment.
+4. Place the models here by default:
+   `app/models/scrfd_500m_bnkps.onnx`
+   `app/models/w600k_r50.onnx`
+
+`config.yaml` is stored as JSON syntax so it can be parsed with Python standard library only.
 
 ## Build Employee Embeddings
 
@@ -96,6 +99,7 @@ python app/main.py
 - The parent process restarts dead camera workers automatically.
 - Duplicate attendance events are suppressed for `cooldown_seconds`.
 - Consecutive-frame confirmation uses a lightweight IoU track association, not a full tracker.
+- The SCRFD model must include landmark outputs (`bnkps`) because ArcFace alignment depends on 5 facial keypoints.
 
 ## Deployment Notes
 

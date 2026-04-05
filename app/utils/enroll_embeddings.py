@@ -82,7 +82,7 @@ def main() -> int:
                 key=lambda face: (face["bbox"][2] - face["bbox"][0])
                 * (face["bbox"][3] - face["bbox"][1]),
             )
-            embedding = largest_face.get("embedding")
+            embedding = engine.extract_embedding(image, largest_face)
             if embedding is None:
                 logger.warning("missing_embedding path=%s", image_path)
                 continue

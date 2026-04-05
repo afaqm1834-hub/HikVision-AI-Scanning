@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
-import yaml
 
 
 @dataclass(frozen=True)
@@ -32,8 +31,13 @@ class RuntimeConfig:
     reconnect_delay_seconds: int
     queue_poll_interval_seconds: float
     process_start_method: str
-    detector_name: str
     providers: list[str]
+    scrfd_model_path: str
+    arcface_model_path: str
+    detector_input_width: int
+    detector_input_height: int
+    detector_score_threshold: float
+    detector_nms_threshold: float
 
 
 @dataclass(frozen=True)
@@ -64,7 +68,7 @@ class AppConfig:
 
 def load_config(config_path: str | Path) -> AppConfig:
     with Path(config_path).open("r", encoding="utf-8") as handle:
-        payload: dict[str, Any] = yaml.safe_load(handle)
+        payload: dict[str, Any] = json.load(handle)
 
     return AppConfig(
         cameras=[CameraConfig(**camera) for camera in payload["cameras"]],
