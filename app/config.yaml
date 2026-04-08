@@ -2,15 +2,8 @@
   "cameras": [
     {
       "id": "cam_1",
-      "url": "rtsp://username:password@192.168.1.101:554/Streaming/Channels/101"
-    },
-    {
-      "id": "cam_2",
-      "url": "rtsp://username:password@192.168.1.102:554/Streaming/Channels/101"
-    },
-    {
-      "id": "cam_3",
-      "url": "rtsp://username:password@192.168.1.103:554/Streaming/Channels/101"
+      "label": "Hikvision Sub Stream",
+      "url": "rtsp://admin:ADMIN12345@192.168.100.231:554/Streaming/Channels/101"
     }
   ],
   "recognition": {
@@ -40,9 +33,10 @@
     "detector_nms_threshold": 0.4
   },
   "api": {
-    "base_url": "http://localhost:3000",
-    "attendance_path": "/api/attendance/mark",
-    "api_key": "change-me",
+    "base_url": "http://localhost:5000",
+    "attendance_path": "/api/face-attendance/mark",
+    "employees_sync_path": "/api/face-attendance/employees",
+    "api_key": "payroll-face-attendance-secret-2026",
     "timeout_seconds": 5,
     "retry_attempts": 3,
     "retry_backoff_seconds": 1.5

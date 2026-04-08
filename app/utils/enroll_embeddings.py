@@ -89,7 +89,7 @@ def main() -> int:
 
             embeddings.append(embedding.tolist())
 
-        if len(embeddings) < 3:
+        if len(embeddings) < 1:
             logger.warning(
                 "insufficient_embeddings employee_id=%s name=%s count=%s",
                 employee_id,

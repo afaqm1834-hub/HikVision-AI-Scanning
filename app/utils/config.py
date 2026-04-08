@@ -10,6 +10,7 @@ from typing import Any
 class CameraConfig:
     id: str
     url: str
+    label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,7 @@ class ApiConfig:
     timeout_seconds: int
     retry_attempts: int
     retry_backoff_seconds: float
+    employees_sync_path: str = "/api/face-attendance/employees"
 
 
 @dataclass(frozen=True)
