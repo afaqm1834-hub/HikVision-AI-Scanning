@@ -33,13 +33,17 @@
     "detector_nms_threshold": 0.4
   },
   "api": {
-    "base_url": "http://localhost:5000",
+    "base_url": "https://your-live-domain.com",
     "attendance_path": "/api/face-attendance/mark",
     "employees_sync_path": "/api/face-attendance/employees",
+    "enrollment_sync_path": "/api/face-enrollment/sync",
+    "enrollment_status_report_path": "/api/face-enrollment/sync/report",
     "api_key": "payroll-face-attendance-secret-2026",
     "timeout_seconds": 5,
     "retry_attempts": 3,
-    "retry_backoff_seconds": 1.5
+    "retry_backoff_seconds": 1.5,
+    "sync_poll_interval_seconds": 120,
+    "enrollment_dataset_dir": "synced-enrollments"
   },
   "logging": {
     "log_dir": "logs",

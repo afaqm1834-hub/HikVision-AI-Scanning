@@ -4,6 +4,7 @@ import json
 import logging
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from urllib import error, request
 
 from app.utils.config import ApiConfig
@@ -88,3 +89,65 @@ class AttendanceApiClient:
                 last_error,
             )
         return False
+
+    def fetch_enrollment_sync_data(self) -> dict | None:
+        url = f"{self.config.base_url.rstrip('/')}{self.config.enrollment_sync_path}"
+        req = request.Request(
+            url=url,
+            method="GET",
+            headers={"x-api-key": self.config.api_key},
+        )
+
+        try:
+            with request.urlopen(req, timeout=self.config.timeout_seconds) as response:
+                payload = response.read().decode("utf-8")
+                return json.loads(payload) if payload else {}
+        except Exception as exc:
+            self.logger.error("enrollment_sync_fetch_failed error=%s", exc)
+            return None
+
+    def report_enrollment_sync_status(self, results: list[dict]) -> bool:
+        payload = json.dumps({"results": results}).encode("utf-8")
+        url = f"{self.config.base_url.rstrip('/')}{self.config.enrollment_status_report_path}"
+        req = request.Request(
+            url=url,
+            data=payload,
+            method="POST",
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": self.config.api_key,
+            },
+        )
+
+        try:
+            with request.urlopen(req, timeout=self.config.timeout_seconds) as response:
+                status = getattr(response, "status", 200)
+                if 200 <= status < 300:
+                    self.logger.info(
+                        "enrollment_sync_reported status=%s results=%s",
+                        status,
+                        len(results),
+                    )
+                    return True
+        except Exception as exc:
+            self.logger.error("enrollment_sync_report_failed error=%s", exc)
+
+        return False
+
+    def download_file(self, url: str, destination: Path) -> bool:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        req = request.Request(url=url, method="GET")
+
+        try:
+            with request.urlopen(req, timeout=self.config.timeout_seconds) as response:
+                data = response.read()
+                destination.write_bytes(data)
+                return True
+        except Exception as exc:
+            self.logger.error(
+                "enrollment_image_download_failed url=%s destination=%s error=%s",
+                url,
+                destination,
+                exc,
+            )
+            return False

@@ -50,6 +50,10 @@ class ApiConfig:
     retry_attempts: int
     retry_backoff_seconds: float
     employees_sync_path: str = "/api/face-attendance/employees"
+    enrollment_sync_path: str = "/api/face-enrollment/sync"
+    enrollment_status_report_path: str = "/api/face-enrollment/sync/report"
+    sync_poll_interval_seconds: int = 120
+    enrollment_dataset_dir: str = "synced-enrollments"
 
 
 @dataclass(frozen=True)

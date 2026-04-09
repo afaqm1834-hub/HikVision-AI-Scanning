@@ -67,6 +67,7 @@ class CameraWorker:
         self.api_client = AttendanceApiClient(config=self.config.api, logger=self.logger)
         self.last_seen: dict[int, float] = {}
         self.track_histories: dict[str, TrackState] = {}
+        self.last_reload_check = 0.0
         self.unknown_limiter = UnknownFaceLimiter(
             self.config.recognition.unknown_save_limit_per_hour
         )
@@ -107,6 +108,7 @@ class CameraWorker:
     def _process_stream(self, capture: cv2.VideoCapture) -> None:
         frame_index = 0
         while True:
+            self._reload_employees_if_needed()
             ok, frame = capture.read()
             if not ok or frame is None:
                 self.logger.warning("empty_frame camera_id=%s", self.camera.id)
@@ -236,6 +238,17 @@ class CameraWorker:
         ]
         for key in expired:
             self.track_histories.pop(key, None)
+
+    def _reload_employees_if_needed(self) -> None:
+        now = time.time()
+        if now - self.last_reload_check < 3:
+            return
+
+        self.last_reload_check = now
+        try:
+            self.recognition.reload_employees_if_changed()
+        except Exception:
+            self.logger.exception("employees_reload_failed")
 
     def _resize_frame(self, frame: np.ndarray) -> np.ndarray:
         width = frame.shape[1]
