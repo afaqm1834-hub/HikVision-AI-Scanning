@@ -1,6 +1,6 @@
 # Real-Time Employee Attendance
 
-Headless Python service for multi-camera employee attendance using Hikvision RTSP streams, SCRFD face detection, ArcFace embeddings, ONNX Runtime inference, and a Node.js attendance API.
+Headless Python service for multi-camera employee attendance using RTSP camera streams, SCRFD face detection, ArcFace embeddings, ONNX Runtime inference, and a Node.js attendance API.
 
 ## Features
 

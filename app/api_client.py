@@ -81,6 +81,12 @@ class AttendanceApiClient:
             error_label="enrollment_sync_fetch_failed",
         )
 
+    def fetch_camera_config(self) -> dict | None:
+        return self._get_json(
+            path=self.config.camera_config_path,
+            error_label="camera_config_fetch_failed",
+        )
+
     def report_enrollment_sync_status(self, results: list[dict]) -> bool:
         payload = {"results": results}
         return self._post_json(

@@ -2,8 +2,8 @@
   "cameras": [
     {
       "id": "cam_1",
-      "label": "Hikvision Sub Stream",
-      "url": "rtsp://admin:ADMIN12345@192.168.100.231:554/Streaming/Channels/101"
+      "label": "Dahua Main Stream",
+      "url": "rtsp://admin:admin123@192.168.3.114:554/cam/realmonitor?channel=1&subtype=0"
     }
   ],
   "recognition": {

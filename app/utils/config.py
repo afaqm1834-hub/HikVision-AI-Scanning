@@ -11,6 +11,15 @@ class CameraConfig:
     id: str
     url: str
     label: str | None = None
+    vendor: str | None = None
+    host: str | None = None
+    port: int | None = None
+    username: str | None = None
+    password: str | None = None
+    channel: int | None = None
+    subtype: str | None = None
+    use_custom_url: bool = False
+    custom_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -50,11 +59,13 @@ class ApiConfig:
     retry_attempts: int
     retry_backoff_seconds: float
     employees_sync_path: str = "/api/face-attendance/employees"
+    camera_config_path: str = "/api/face-attendance/camera-config"
     enrollment_sync_path: str = "/api/face-enrollment/sync"
     enrollment_status_report_path: str = "/api/face-enrollment/sync/report"
     unknown_person_detect_path: str = "/api/unknown-persons/detect"
     unknown_persons_sync_path: str = "/api/unknown-persons/sync"
     sync_poll_interval_seconds: int = 120
+    camera_config_poll_interval_seconds: int = 30
     enrollment_dataset_dir: str = "synced-enrollments"
 
 
