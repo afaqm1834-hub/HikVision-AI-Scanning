@@ -77,12 +77,20 @@ class LoggingConfig:
 
 
 @dataclass(frozen=True)
+class AudioConfig:
+    enabled: bool
+    success_sound_path: str
+    volume: float
+
+
+@dataclass(frozen=True)
 class AppConfig:
     cameras: list[CameraConfig]
     recognition: RecognitionConfig
     runtime: RuntimeConfig
     api: ApiConfig
     logging: LoggingConfig
+    audio: AudioConfig
 
 
 def load_config(config_path: str | Path) -> AppConfig:
@@ -95,4 +103,9 @@ def load_config(config_path: str | Path) -> AppConfig:
         runtime=RuntimeConfig(**payload["runtime"]),
         api=ApiConfig(**payload["api"]),
         logging=LoggingConfig(**payload["logging"]),
+        audio=AudioConfig(**payload.get("audio", {
+            "enabled": True,
+            "success_sound_path": "audio/att-sound.mp3",
+            "volume": 1.0,
+        })),
     )

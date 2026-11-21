@@ -1,7 +1,14 @@
 # Python cache and build artifacts
 __pycache__/
 *.py[cod]
+*.py[cod].*
 *$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
 
 # Virtual environments
 .venv/
@@ -18,20 +25,56 @@ ENV/
 Thumbs.db
 
 # Runtime logs and captured images
-app/logs/**
+app/logs/*
+/logs/
 *.log
 *.jpg
 *.jpeg
 *.png
+*.webp
+*.bmp
+*.heic
+*.mp4
+*.avi
+*.mkv
 !app/logs/.gitkeep
 
-# Downloaded model files and archives
+# Generated employee embeddings and enrollment datasets
+app/employees*.json
+**/*embedding*.json
+app/synced-enrollments/
+synced-enrollments/
+dataset/
+app/dataset/
+unknown_faces/
+app/unknown_faces/
+
+# Scanner process state
+.scanner.lock
+*.pid
+
+# Downloaded models, numerical arrays, and archives
 app/models/*
 !app/models/.gitkeep
 buffalo_l/
 *.zip
+*.7z
+*.tar
+*.gz
 *.onnx
+*.pt
+*.pth
+*.pb
+*.h5
+*.tflite
+*.safetensors
+*.npy
+*.npz
+*.pkl
+*.pickle
 
-# Local environment files
+# Local configuration can contain camera passwords and API keys
+app/config.yaml
 .env
 .env.*
+!.env.example

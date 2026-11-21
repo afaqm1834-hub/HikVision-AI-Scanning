@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 
 from app.api_client import AttendanceApiClient
+from app.audio_player import AudioPlayer
 from app.recognition import FaceRecognitionEngine, RecognitionResult
 from app.utils.config import AppConfig, CameraConfig
 from app.utils.logging_utils import setup_logger
@@ -68,6 +69,12 @@ class CameraWorker:
             logger=self.logger,
         )
         self.api_client = AttendanceApiClient(config=self.config.api, logger=self.logger)
+        self.audio_player = AudioPlayer(
+            audio_path=self.app_dir.parent / self.config.audio.success_sound_path,
+            enabled=self.config.audio.enabled,
+            volume=self.config.audio.volume,
+            logger=self.logger,
+        )
         self.track_histories: dict[str, TrackState] = {}
         self.last_reload_check = 0.0
         self.unknown_limiter = UnknownFaceLimiter(
@@ -172,6 +179,7 @@ class CameraWorker:
                 )
                 if sent:
                     state.emitted_employee_id = result.employee_id
+                    self.audio_player.play()
         else:
             state.recent_ids.clear()
             unknown_candidate = (
@@ -296,6 +304,9 @@ class CameraWorker:
         target_height = int(frame.shape[0] * ratio)
         return cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_AREA)
 
+    def close(self) -> None:
+        self.audio_player.close()
+
     @staticmethod
     def _face_bbox(face: dict) -> tuple[int, int, int, int]:
         bbox = np.asarray(face["bbox"], dtype=np.int32)
@@ -330,4 +341,7 @@ class CameraWorker:
 
 def run_camera_worker(camera: CameraConfig, config: AppConfig, app_dir: str) -> None:
     worker = CameraWorker(camera=camera, config=config, app_dir=Path(app_dir))
-    worker.run_forever()
+    try:
+        worker.run_forever()
+    finally:
+        worker.close()

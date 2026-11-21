@@ -21,6 +21,7 @@ Headless Python service for multi-camera employee attendance using RTSP camera s
 app/
   main.py
   camera_worker.py
+  audio_player.py
   recognition.py
   api_client.py
   config.yaml
@@ -95,6 +96,8 @@ python app/main.py
 ## Operational Notes
 
 - Unknown faces are saved under `logs/unknown_faces`.
+- A successful registered-person punch plays `audio/att-sound.mp3` on the scanner machine.
+- Audio can be disabled or adjusted under the `audio` section of `app/config.yaml`.
 - Each camera process reconnects after stream failure.
 - The parent process restarts dead camera workers automatically.
 - Duplicate attendance events are suppressed for `cooldown_seconds`.
