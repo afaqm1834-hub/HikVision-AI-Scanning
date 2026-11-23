@@ -358,7 +358,7 @@ class FaceRecognitionEngine:
             self._employees_mtime = 0.0
             return []
 
-        self._employees_mtime = path.stat().st_mtime
+        loaded_mtime = path.stat().st_mtime
         with path.open("r", encoding="utf-8") as handle:
             payload: list[dict[str, Any]] = json.load(handle)
 
@@ -382,6 +382,7 @@ class FaceRecognitionEngine:
             )
 
         self.logger.info("loaded_employees count=%s", len(employees))
+        self._employees_mtime = loaded_mtime
         return employees
 
     def reload_employees_if_changed(self) -> bool:
@@ -422,6 +423,7 @@ class FaceRecognitionEngine:
         self,
         face: dict[str, Any],
         frame: np.ndarray,
+        employee_id: int | None = None,
     ) -> RecognitionResult:
         bbox = np.asarray(face["bbox"], dtype=np.int32)
         left, top, right, bottom = bbox.tolist()
@@ -445,7 +447,7 @@ class FaceRecognitionEngine:
         if embedding is None or embedding.size == 0:
             return RecognitionResult(None, None, 0.0, False, "missing_embedding")
 
-        best_match = self._match_employee(embedding)
+        best_match = self._match_employee(embedding, employee_id=employee_id)
         if best_match is None:
             return RecognitionResult(
                 None,
@@ -477,13 +479,15 @@ class FaceRecognitionEngine:
         )
 
     def _match_employee(
-        self, embedding: np.ndarray
+        self, embedding: np.ndarray, employee_id: int | None = None
     ) -> tuple[EmployeeRecord, float] | None:
         if not self.employees:
             return None
 
         scored: list[tuple[EmployeeRecord, float]] = []
         for employee in self.employees:
+            if employee_id is not None and employee.employee_id != employee_id:
+                continue
             similarities = employee.embeddings @ embedding
             if self.recognition_config.match_strategy == "best_match":
                 score = float(np.max(similarities))
@@ -492,7 +496,29 @@ class FaceRecognitionEngine:
                 top_values = np.sort(similarities)[-top_k:]
                 score = float(np.mean(top_values))
             scored.append((employee, score))
-        return max(scored, key=lambda item: item[1])
+        return max(scored, key=lambda item: item[1]) if scored else None
+
+    def verify_mobile_photo(self, image_bytes: bytes, employee_id: int) -> dict:
+        """Verify a claimed identity; never enroll a mobile attendance photo."""
+        self.reload_employees_if_changed()
+        threshold = self.recognition_config.threshold
+        if not any(employee.employee_id == employee_id for employee in self.employees):
+            return {"outcome": "rejected", "reason": "EMPLOYEE_NOT_ENROLLED"}
+        try:
+            frame = cv2.imdecode(np.frombuffer(image_bytes, dtype=np.uint8), cv2.IMREAD_COLOR)
+        except cv2.error:
+            frame = None
+        if frame is None or frame.size == 0 or frame.shape[0] * frame.shape[1] > 20_000_000:
+            return {"outcome": "rejected", "reason": "INVALID_PHOTO"}
+        faces = self.detect_faces(frame)
+        if len(faces) != 1:
+            return {"outcome": "rejected", "reason": "NO_FACE" if not faces else "MULTIPLE_FACES"}
+        result = self.evaluate_face(faces[0], frame, employee_id=employee_id)
+        reasons = {"face_too_small": "FACE_TOO_SMALL", "face_too_blurry": "FACE_TOO_BLURRY",
+                   "below_threshold": "FACE_MISMATCH", "empty_crop": "INVALID_PHOTO"}
+        return {"outcome": "matched" if result.accepted else "rejected",
+                "reason": "FACE_MATCHED" if result.accepted else reasons.get(result.reason, "VERIFICATION_ERROR"),
+                "score": result.score, "threshold": threshold}
 
     @staticmethod
     def _normalize_vector(vector: np.ndarray) -> np.ndarray:

@@ -81,6 +81,19 @@ This writes [app/employees.json](/d:/HikVision%20AI%20Tracking/app/employees.jso
 
 ## Run
 
+The app also starts a supervised mobile attendance worker. It claims captured
+photos from the backend, verifies the selected employee against existing enrolled
+embeddings, and reports the result. Attendance dates, payroll rules, private photo
+storage and database writes remain on the backend. Mobile photos do not become
+new enrollment images.
+
+The worker uses the existing API base URL and scanner API key. Optional `api`
+config settings are `mobile_attendance_enabled` (default `true`) and
+`mobile_attendance_poll_seconds` (default `2`). Deploy the backend mobile attendance
+migration/endpoints first. Mobile clients must never receive the scanner API key.
+
+Run worker/verification tests with `python -B -m unittest discover -s tests -v`.
+
 Preferred:
 
 ```bash

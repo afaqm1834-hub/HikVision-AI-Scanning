@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import uuid
 import json
 import sys
 from pathlib import Path
@@ -117,8 +118,13 @@ def generate_embeddings(
 
     output_path = Path(output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as handle:
-        json.dump(records, handle, indent=2)
+    temporary_path = output_path.with_name(f".{output_path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        with temporary_path.open("w", encoding="utf-8") as handle:
+            json.dump(records, handle, indent=2)
+        temporary_path.replace(output_path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
     logger.info("enrollment_complete output=%s employees=%s", output_path, len(records))
     return records

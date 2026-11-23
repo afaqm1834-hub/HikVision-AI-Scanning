@@ -14,6 +14,7 @@ if __package__ in {None, ""}:
 from app.camera_worker import run_camera_worker
 from app.api_client import AttendanceApiClient
 from app.sync_service import EnrollmentSyncService
+from app.mobile_attendance_worker import run_mobile_attendance_worker
 from app.utils.config import CameraConfig
 from app.utils.config import load_config
 from app.utils.logging_utils import setup_logger
@@ -43,6 +44,15 @@ def _stop_camera_processes(processes: list[mp.Process]) -> None:
             process.terminate()
     for process in processes:
         process.join(timeout=10)
+
+
+def _start_mobile_process(config, app_dir: Path, logger):
+    if not config.api.mobile_attendance_enabled:
+        return None
+    process = mp.Process(target=run_mobile_attendance_worker, args=(config, str(app_dir)), name="mobile-attendance-worker")
+    process.start()
+    logger.info("mobile_attendance_process_started pid=%s", process.pid)
+    return process
 
 
 def _start_sync_thread(config, app_dir: Path) -> tuple[EnrollmentSyncService, threading.Event, threading.Thread]:
@@ -142,6 +152,7 @@ def main() -> int:
 
     _sync_service, sync_should_stop, sync_thread = _start_sync_thread(config, app_dir)
     processes = _start_camera_processes(config, app_dir, logger)
+    mobile_process = _start_mobile_process(config, app_dir, logger)
 
     try:
         while not should_stop.is_set():
@@ -171,8 +182,14 @@ def main() -> int:
             if should_reload:
                 _stop_sync_thread(sync_should_stop, sync_thread)
                 _stop_camera_processes(processes)
+                _stop_camera_processes([mobile_process] if mobile_process else [])
                 _sync_service, sync_should_stop, sync_thread = _start_sync_thread(config, app_dir)
                 processes = _start_camera_processes(config, app_dir, logger)
+                mobile_process = _start_mobile_process(config, app_dir, logger)
+
+            if mobile_process is not None and not mobile_process.is_alive():
+                mobile_process.join(timeout=1)
+                mobile_process = _start_mobile_process(config, app_dir, logger)
 
             for index, process in enumerate(processes):
                 if process.is_alive():
@@ -203,6 +220,7 @@ def main() -> int:
     finally:
         _stop_sync_thread(sync_should_stop, sync_thread)
         _stop_camera_processes(processes)
+        _stop_camera_processes([mobile_process] if mobile_process else [])
         logger.info("attendance_service_stopped")
 
     return 0

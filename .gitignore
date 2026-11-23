@@ -17,7 +17,6 @@ env/
 ENV/
 
 # Local editor and OS files
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -52,6 +51,7 @@ app/unknown_faces/
 # Scanner process state
 .scanner.lock
 *.pid
+app/.employees.json.*.tmp
 
 # Downloaded models, numerical arrays, and archives
 app/models/*
@@ -75,6 +75,6 @@ buffalo_l/
 
 # Local configuration can contain camera passwords and API keys
 app/config.yaml
-.env
-.env.*
 !.env.example
+config.bat
+node_modules

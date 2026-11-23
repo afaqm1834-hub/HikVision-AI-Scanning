@@ -67,6 +67,8 @@ class ApiConfig:
     sync_poll_interval_seconds: int = 120
     camera_config_poll_interval_seconds: int = 30
     enrollment_dataset_dir: str = "synced-enrollments"
+    mobile_attendance_enabled: bool = True
+    mobile_attendance_poll_seconds: float = 2.0
 
 
 @dataclass(frozen=True)

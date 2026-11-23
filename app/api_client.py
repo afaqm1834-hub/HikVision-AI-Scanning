@@ -16,6 +16,41 @@ class AttendanceApiClient:
         self.config = config
         self.logger = logger
 
+    def mobile_json(self, path: str, payload: dict) -> dict | None:
+        """Only call backend-owned job paths; never follow a job-supplied host."""
+        if not path.startswith("/api/mobile/attendance/worker/"):
+            raise ValueError("Invalid mobile worker API path")
+        req = request.Request(
+            url=f"{self.config.base_url.rstrip('/')}{path}",
+            data=json.dumps(payload).encode("utf-8"), method="POST",
+            headers={"Content-Type": "application/json", "x-api-key": self.config.api_key},
+        )
+        try:
+            with request.urlopen(req, timeout=self.config.timeout_seconds) as response:
+                return json.loads(response.read(131072).decode("utf-8"))
+        except error.HTTPError as exc:
+            self.logger.warning("mobile_worker_api_failed status=%s", exc.code)
+            return {"http_status": exc.code}
+        except Exception:
+            self.logger.exception("mobile_worker_api_unavailable")
+            return None
+
+    def mobile_photo(self, request_id: str, lease_token: str) -> bytes | None:
+        # IDs originate from our backend; UUID validation also prevents URL injection.
+        from uuid import UUID
+        request_id = str(UUID(request_id))
+        req = request.Request(
+            url=f"{self.config.base_url.rstrip('/')}/api/mobile/attendance/worker/jobs/{request_id}/photo",
+            headers={"x-api-key": self.config.api_key, "x-job-token": lease_token}, method="GET",
+        )
+        try:
+            with request.urlopen(req, timeout=self.config.timeout_seconds) as response:
+                data = response.read(8 * 1024 * 1024 + 1)
+                return data if 0 < len(data) <= 8 * 1024 * 1024 else None
+        except Exception:
+            self.logger.exception("mobile_photo_download_failed request_id=%s", request_id)
+            return None
+
     def send_attendance(self, employee_id: int, camera_id: str) -> bool:
         payload = {
             "employee_id": employee_id,
